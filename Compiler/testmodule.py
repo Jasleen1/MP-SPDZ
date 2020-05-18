@@ -3,6 +3,8 @@
 from Compiler.util import *
 from Compiler.types import *
 from Compiler.library import *
+from Compiler.program import Tape
+
 
 def test_module():
     print_ln("hi")

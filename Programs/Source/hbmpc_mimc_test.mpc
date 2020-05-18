@@ -1,9 +1,13 @@
-program.bit_length = 255
+program.bit_length = 64
 print("program.bit_length: ", program.bit_length)
 program.security = 40
 
-from testmodule import test_module
-test_module()
+from cshingles_dataset import cShinglesDataSet 
+from fuzzy_string import FuzzyString
+
+from bitonic_sort import BitonicSort
+
+import constants 
 
 # MiMC
 rounds = 161
@@ -18,17 +22,14 @@ def mimc_prf(m, key):
     x = x + key
     return x
 
-# Inputs
-a = sint.get_input_from(0)
-b = sint.get_input_from(1)
-c = sint.get_input_from(2)
+
 
 # Array of (duplicate) inputs
-n = 50
-A = Array(n, sint)
-@for_range(n)
-def f(i):
-    A[i] = sint(a)
+#n = 50
+#A = Array(n, sint)
+#@for_range(n)
+#def f(i):
+#    A[i] = sint(a)
 
 # Compute equalities
 # if 0:
@@ -37,11 +38,100 @@ def f(i):
 #         sum += (A[i] == 5)
 
 # Compute mimc
-zs = Array(n, sint)
-@for_range(n)
-def f(i):
-    zs[i] = mimc_prf(a, i)
-y = sum(zs)
-print_ln('Computing %s instances of MIMC', n)
-y = mimc_prf(a, b)
-print_ln('MiMC(%s, %s) = %s', a.reveal(), b.reveal(), y.reveal());
+#zs = Array(n, sint)
+#@for_range(n)
+#def f(i):
+#    zs[i] = mimc_prf(a, i)
+#y = sum(zs)
+#print_ln('Computing %s instances of MIMC', n)
+#y = mimc_prf(a, b)
+#print_ln('MiMC(%s, %s) = %s', a.reveal(), b.reveal(), y.reveal());
+
+
+# Inputs
+a = sint.get_input_from(0)
+b = sint.get_input_from(1)
+c = sint.get_input_from(2)
+
+
+d = cint(5)
+e = sint(5)
+equality = BitonicSort.checkEqualityWithKnownVal(d, e, 5)
+
+print_ln("Checking equality with known value test: %s ",equality.reveal() == 1)
+
+f = sint(4)
+inequality = BitonicSort.checkEqualityWithKnownVal(d, f, 5)
+print_ln("Checking inequality with known value test: %s ", inequality.reveal() == 0)
+
+#for i in range(5):
+	#print_ln("%s ",bitlist[i].reveal())
+	#print_ln("%s", type(bitlist[i]))
+
+
+abcde_ints = [sint(44), sint(45), sint(46), sint(47), sint(48)]
+abdec_ints = [sint(44), sint(45), sint(47), sint(48), sint(46)]
+xyzAB_ints = [sint(68), sint(69), sint(70), sint(71), sint(72)]
+
+
+dset = cShinglesDataSet(data=[abcde_ints, abdec_ints])
+
+abcde_shingles = FuzzyString.getShingles(abcde_ints, 5, 2)
+abcde_string = FuzzyString(abcde_ints)
+
+matched1 = dset.checkFuzzyMatch(abcde_string, abcde_shingles)
+m1 = matched1.reveal()
+print_ln("Search for present value test: %s", m1 == 1)
+
+xyzAB_shingles = FuzzyString.getShingles(xyzAB_ints, 5, 2)
+xyzAB_string = FuzzyString(xyzAB_ints)
+
+matched0 = dset.checkFuzzyMatch(xyzAB_string, xyzAB_shingles)
+m0 = matched0.reveal()
+print_ln("Search for non-present value test: %s", m0 == 0)
+
+
+list_with_zeros = [sint(44), sint(45), sint(0), sint(46), sint(47), sint(48), sint(0)]
+
+BitonicSort.pushZerosToBack(list_with_zeros)
+list_with_zeros_test = (list_with_zeros[-1].reveal() == 0) * (list_with_zeros[-2].reveal() == 0)
+print_ln("Pushed zeros to back test for all zeros in the back: %s", list_with_zeros_test)
+
+list_with_a_zero = [sint(44), sint(45), sint(0), sint(46), sint(47), sint(48)]
+
+BitonicSort.pushZerosToBack(list_with_a_zero)
+list_with_a_zero_test = (list_with_a_zero[-1].reveal() == 0) * (list_with_a_zero[-2].reveal() != 0)
+print_ln("Pushed zeros to back test for correct number of zeros in the back: %s", list_with_a_zero_test)
+
+
+short_list = [sint(44), sint(10), sint(45), sint(11)]
+fs = FuzzyString(short_list)
+
+short_list_subs = [sint(44), sint(10), sint(45), sint(10)]
+other_subs = FuzzyString.createFuzzyString(short_list_subs)
+dist_val_subs = fs.levenstein_distance(other_subs, 4)
+print_ln("Levenstein distance substitution test = %s", dist_val_subs.reveal() == 1)
+
+short_list3 = [sint(44), sint(10), sint(45)]
+other3 = FuzzyString.createFuzzyString(short_list3)
+dist_val_l3 = fs.levenstein_distance(other3, 3)
+print_ln("Levenstein distance deletion test = %s", dist_val_l3.reveal() == 1)
+
+short_list4 = [sint(44), sint(10), sint(45), sint(11)]
+other4 = FuzzyString.createFuzzyString(short_list4)
+dist_val_l4 = fs.levenstein_distance(other4, 4)
+print_ln("Levenstein distance zero test = %s", dist_val_l4.reveal() == 0)
+
+short_list5 = [sint(44), sint(10), sint(45), sint(10), sint(0)]
+other5 = FuzzyString.createFuzzyString(short_list5)
+dist_val_l5 = fs.levenstein_distance(other5, 5)
+print_ln("Levenstein distance insertion test = %s", dist_val_l5.reveal() == 1)
+
+
+
+
+short_list3 = [sint(44), sint(10), sint(45)]
+other3 = FuzzyString.createFuzzyString(short_list3)
+dist_val_l3 = fs.levenstein_distance(other3, 3)
+print_ln("Levenstein distance deletion test = %s", dist_val_l3.reveal() == 1)
+
