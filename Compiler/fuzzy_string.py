@@ -42,7 +42,7 @@ class FuzzyString(object):
     def __init__(self, value, num_chars=None):
         """Initialize a fuzzy string."""
         self.value = value
-        self.accumulated_string = FuzzyString.createFuzzyString(value)
+        #self.accumulated_string = FuzzyString.createFuzzyString(value)
         self.num_chars = num_chars
         if num_chars == None:
             self.num_chars = len(value)
@@ -101,8 +101,8 @@ class FuzzyString(object):
     def multiply_with_const(constant, accumulated_chars):
         return constant * accumulated_chars
 
-    def multiply_val_with_const(self, constant):
-        return constant * self.accumulated_string
+    # def multiply_val_with_const(self, constant):
+    #     return constant * self.accumulated_string
 
     def levenstein_distance(self, other, other_len):
         other_chars = FuzzyString.getChars(other, other_len)
@@ -116,8 +116,7 @@ class FuzzyString(object):
         for i in range(x_len + 1):
             for j in range(y_len + 1):
                 dynamicProgMatrix[i][j] = constants.ZERO
-        X = cint(x_len)
-        Y = cint(y_len)
+
         for i in range(1, x_len + 1):
             dynamicProgMatrix[i][0] = dynamicProgMatrix[i - 1][
                 0

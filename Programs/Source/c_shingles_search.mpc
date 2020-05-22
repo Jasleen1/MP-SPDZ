@@ -1,0 +1,96 @@
+program.bit_length = 64
+print("program.bit_length: ", program.bit_length)
+program.security = 40
+
+from cshingles_dataset import cShinglesDataSet 
+from fuzzy_string import FuzzyString
+
+from bitonic_sort import BitonicSort
+
+import constants 
+
+# MiMC
+rounds = 161
+
+@vectorize
+def mimc_prf(m, key):
+    x = m
+
+    for r in range(rounds):
+        x = (x + key + r) ** 3
+
+    x = x + key
+    return x
+
+
+
+# Array of (duplicate) inputs
+#n = 50
+#A = Array(n, sint)
+#@for_range(n)
+#def f(i):
+#    A[i] = sint(a)
+
+# Compute equalities
+# if 0:
+#     sum = 0
+#     for _ in range(n):
+#         sum += (A[i] == 5)
+
+# Compute mimc
+#zs = Array(n, sint)
+#@for_range(n)
+#def f(i):
+#    zs[i] = mimc_prf(a, i)
+#y = sum(zs)
+#print_ln('Computing %s instances of MIMC', n)
+#y = mimc_prf(a, b)
+#print_ln('MiMC(%s, %s) = %s', a.reveal(), b.reveal(), y.reveal());
+
+
+# Inputs
+a = sint.get_input_from(0)
+b = sint.get_input_from(1)
+c = sint.get_input_from(2)
+
+
+
+def generate_dataset(number_of_points):
+	data_raw = []
+	for i in range(number_of_points):
+		letter = sint(44)
+		word = []
+		for j in range(constants.STRING_LENGTH):
+			word.append(letter)
+		data_raw.append(word)
+	return cShinglesDataSet(data=data_raw)
+
+def setup_and_run_experiment_true(number_of_points, number_of_trials):
+	dset = generate_dataset(number_of_points)
+	letter = sint(44)
+	word_ints = []
+	for j in range(constants.STRING_LENGTH):
+			word_ints.append(letter)
+	word_shingles = FuzzyString.getShingles(word_ints, constants.STRING_LENGTH, constants.SHINGLES)
+	word_string = FuzzyString(word_ints, constants.STRING_LENGTH)
+	# for i in range(number_of_trials):
+	# 	found = dset.checkFuzzyMatch(word_string, word_shingles)
+	# 	print_ln("Found = %s", found.reveal())
+	run_experiment(dset, number_of_trials, word_string, word_shingles)
+
+
+def run_experiment(dset, number_of_trials, fuzzy_str, word_shingles):
+	for i in range(number_of_trials):
+		found = dset.checkFuzzyMatch(fuzzy_str, word_shingles)
+		print_ln("Found = %s", found.reveal())
+
+
+
+setup_and_run_experiment_true(1000, 10)
+
+
+
+
+
+
+

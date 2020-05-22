@@ -9,7 +9,7 @@ from Compiler.bitonic_sort import BitonicSort
 from Compiler.fuzzy_string import FuzzyString
 
 class cShinglesDataSet(object):
-    def __init__(self, c_param=2, num_chars=constants.STRING_LENGTH, threshold=constants.TWO, data=None):
+    def __init__(self, c_param=constants.SHINGLES, num_chars=constants.STRING_LENGTH, threshold=constants.TWO, data=None):
         self.c_param = c_param
         self.num_chars = num_chars
         self.threshold = threshold
@@ -28,8 +28,7 @@ class cShinglesDataSet(object):
         potentialMatches = []
         for i, point in enumerate(self.shingledData):
             shingles_dist = cShinglesDataSet.shinglesDist(shingles, point, self.num_shingles)
-            potential = shingles_dist.less_than(self.t)
-            potentialMatches.append(FuzzyString.multiply_with_const(potential, self.data[i]))
+            potentialMatches.append(FuzzyString.multiply_with_const(shingles_dist.less_than(self.t), self.data[i]))
             
         BitonicSort.pushZerosToBack(potentialMatches)
 
@@ -38,8 +37,7 @@ class cShinglesDataSet(object):
 
         for i, candidate in enumerate(candidates):
             dist_val = fuzzyMatchStr.levenstein_distance(candidate, self.num_chars)
-            pred = (self.threshold > dist_val)
-            match.append(pred)
+            match.append((self.threshold > dist_val))
 
         BitonicSort.pushZerosToBack(match)
         return match[0]
@@ -53,6 +51,6 @@ class cShinglesDataSet(object):
         dist = (num_shingles + num_shingles)
         for s in shingles1:
             for t in shingles2:
-                equality = BitonicSort.checkEqualityWithKnownVal(s, t, 10)
+                equality = BitonicSort.checkEqualityWithKnownVal(s, t, 64)
                 dist -= (equality + equality)
         return dist

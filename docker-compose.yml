@@ -11,4 +11,4 @@ services:
     volumes:
       - ./Programs:/usr/src/MP-SPDZ/Programs
       - ./Compiler:/usr/src/MP-SPDZ/Compiler
-    command: bash Programs/Source/hbmpc_mimc_test.sh
+    command: bash Programs/Source/c_shingles_search.sh
