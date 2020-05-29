@@ -40,9 +40,9 @@ import sys
 
 
 # Inputs
-a = sint.get_input_from(0)
-b = sint.get_input_from(1)
-c = sint.get_input_from(2)
+# a = sint.get_input_from(0)
+# b = sint.get_input_from(1)
+# c = sint.get_input_from(2)
 
 
 def generate_char_list():
@@ -95,7 +95,7 @@ def setup_and_run_experiment_true(number_of_trials, dset=None, number_of_points=
 	# 	print_ln("Found = %s", found.reveal())
 	initial = time()
 	#run_shingles_experiment(dset, number_of_trials, word_string, word_shingles)
-	#run_sort_experiment(number_of_trials, dset.data)
+	run_sort_experiment(number_of_trials, dset.data)
 	final = time()
 	print_ln("Initial time = %s", initial)
 	print_ln("Final time = %s", final)
@@ -119,13 +119,13 @@ def run_sort_experiment(number_of_trials, points):
 		BitonicSort.pushZerosToBack(points)
 
 
-# num_read = int(sys.stdin.read())
+num_read = int(sys.stdin.read())
 
-# #write_dataset(100)
-# dset = read_dataset(num_read)
-# # dset.printData()
-# print_ln("data len = %s", len(dset.data))
-setup_and_run_experiment_true(1, number_of_points=4)#, dset=dset)
+#write_dataset(100)
+dset = read_dataset(num_read)
+# dset.printData()
+print_ln("data len = %s", len(dset.data))
+setup_and_run_experiment_true(1, dset=dset)
 
 #print_ln("Average search time per point for data size %s = %s", num_read, avg_search_time)
 

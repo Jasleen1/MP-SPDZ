@@ -106,6 +106,7 @@ def merge(a, b, comp):
 def sort(a, comp):
     """ Pads to power of 2, sorts, removes padding """
     length = len(a)
+    print_ln("Sorting list, size = %s", length)
     while len(a) & (len(a)-1) != 0:
         a.append(None)
     odd_even_merge_sort(a, comp)

@@ -12,7 +12,24 @@ threshold=1
 #     ./compile.py -D -v -C -F 256 $i || exit 1 
 # done
 
+#mkdir Player-Data
+
+# Set up the player inputs	
+echo 14 > Player-Data/Input-P0-0
+echo 12 > Player-Data/Input-P1-0
+echo 8 > Player-Data/Input-P2-0
+echo 0 > Player-Data/Input-P3-0
+
+mkdir Persistence
+SHARE_FILES=$(ls /shares/Persistence)
+for f in $SHARE_FILES
+do
+	cat /shares/Persistence/$f > Persistence/$f
+done
+
+
 sortingSizes=(2 4)
+
 for size in ${sortingSizes[*]}; do
 	for i in c_shingles_search; do
 	    echo $size | ./compile.py -D -v -C -F 256 $i || exit 1 
@@ -21,22 +38,12 @@ for size in ${sortingSizes[*]}; do
 	# Setup the network authentication
 	Scripts/setup-ssl.sh 4
 
-	# Set up the player inputs
-	mkdir Player-Data
-	echo 14 > Player-Data/Input-P0-0
-	echo 12 > Player-Data/Input-P1-0
-	echo 8 > Player-Data/Input-P2-0
-	echo 0 > Player-Data/Input-P3-0
+	
 
-	mkdir Persistence
+	
 	progs="./malicious-shamir-party.x"
 
-	SHARE_FILES=$(ls /shares/Persistence)
-	for f in $SHARE_FILES
-	do
-		cat /shares/Persistence/$f > Persistence/$f
-	done
-
+	
 	for prog in $progs; do
 	    echo "Combined Offline/Online Experiment $prog"
 	    for i in 0 1 2 3; do
