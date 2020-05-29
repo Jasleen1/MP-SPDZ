@@ -22,10 +22,10 @@ echo 0 > Player-Data/Input-P3-0
 
 mkdir Persistence
 SHARE_FILES=$(ls /shares/Persistence)
-for f in $SHARE_FILES
-do
-	cat /shares/Persistence/$f > Persistence/$f
-done
+# for f in $SHARE_FILES
+# do
+# 	cat /shares/Persistence/$f > Persistence/$f
+# done
 
 
 sortingSizes=(2 4)
