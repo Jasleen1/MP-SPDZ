@@ -9,13 +9,16 @@ from Compiler.bitonic_sort import BitonicSort
 from Compiler.fuzzy_string import FuzzyString
 
 class cShinglesDataSet(object):
-    def __init__(self, c_param=constants.SHINGLES, num_chars=constants.STRING_LENGTH, threshold=constants.TWO, data=None):
+    def __init__(self, c_param=constants.cSHINGLES, num_chars=constants.STRING_LENGTH, threshold=constants.TWO, data=None, shingles=None):
         self.c_param = c_param
         self.num_chars = num_chars
         self.threshold = threshold
         self.num_shingles = num_chars - c_param + 1
         self.t = (constants.TWO * cint(c_param) - constants.ONE) * threshold
-        if data != None:
+        if (shingles != None) and (data != None):
+            self.data = data
+            self.shingledData = shingles
+        elif data != None:
             self.data = list(map(lambda x: FuzzyString.createFuzzyString(FuzzyString.padToLen(x, num_chars)), data))
             # For now leaking len of word, later replace len(x) with a sint which is input with data and put dummy shingles
             self.shingledData = list(map(lambda x: FuzzyString.getShingles(x, len(x), c_param, num_chars), data))
@@ -54,3 +57,9 @@ class cShinglesDataSet(object):
                 equality = BitonicSort.checkEqualityWithKnownVal(s, t, 64)
                 dist -= (equality + equality)
         return dist
+
+    def printData(self):
+        for d in self.data:
+            dlist = list(map(lambda x: x.reveal(), FuzzyString.getChars(d, constants.STRING_LENGTH)))
+            print_ln("%s", dlist)
+

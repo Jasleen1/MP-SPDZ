@@ -1,0 +1,39 @@
+program.bit_length = 64
+print("program.bit_length: ", program.bit_length)
+program.security = 40
+
+from cshingles_dataset import cShinglesDataSet 
+from fuzzy_string import FuzzyString
+
+from bitonic_sort import BitonicSort
+
+from instructions import writesharestofile, readsharesfromfile
+
+import constants
+import itertools
+
+def generate_char_list():
+	letter = sint(44)
+	word = []
+	for j in range(constants.STRING_LENGTH):
+		word.append(letter)
+	return word
+
+def generate_dataset(number_of_points):
+	data_raw = []
+	for i in range(number_of_points):
+		word = generate_char_list()
+		data_raw.append(word)
+	return cShinglesDataSet(data=data_raw)
+
+def write_dataset(number_of_points):
+	data_raw = [generate_char_list() for i in range(number_of_points)]
+	data = [FuzzyString.createFuzzyString(char_list) for char_list in data_raw]
+	shingles = [FuzzyString.getShingles(x, constants.STRING_LENGTH, constants.cSHINGLES, constants.STRING_LENGTH) for x in data_raw]
+	for i in range(number_of_points):
+		writesharestofile(data[i])
+		for j in range(constants.cSHINGLES_LENGTH):
+			writesharestofile(shingles[i][j])
+
+
+write_dataset(100)

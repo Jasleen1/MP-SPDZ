@@ -39,4 +39,5 @@ class BitonicSort(object):
     @staticmethod
     @vectorize
     def pushZerosToBack(sint_list):
+        print_ln("Sorting list")
         sort(sint_list, BitonicSort.greaterIfZero)

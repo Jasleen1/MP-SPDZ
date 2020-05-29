@@ -7,20 +7,11 @@ from fuzzy_string import FuzzyString
 
 from bitonic_sort import BitonicSort
 
-import constants 
+from instructions import writesharestofile, readsharesfromfile
 
-# MiMC
-rounds = 161
-
-@vectorize
-def mimc_prf(m, key):
-    x = m
-
-    for r in range(rounds):
-        x = (x + key + r) ** 3
-
-    x = x + key
-    return x
+import constants
+import itertools
+import sys
 
 
 
@@ -54,43 +45,122 @@ b = sint.get_input_from(1)
 c = sint.get_input_from(2)
 
 
+def generate_char_list():
+	letter = sint(44)
+	word = []
+	for j in range(constants.STRING_LENGTH):
+		word.append(letter)
+	return word
 
 def generate_dataset(number_of_points):
 	data_raw = []
 	for i in range(number_of_points):
-		letter = sint(44)
-		word = []
-		for j in range(constants.STRING_LENGTH):
-			word.append(letter)
+		word = generate_char_list()
 		data_raw.append(word)
 	return cShinglesDataSet(data=data_raw)
 
-def setup_and_run_experiment_true(number_of_points, number_of_trials):
-	dset = generate_dataset(number_of_points)
+
+def read_dataset(number_of_points):
+	data = []
+	shingles = []
+	start_posn = regint(0)
+	
+	for i in range(number_of_points):
+		posn = regint()
+		shares = sint()
+		readsharesfromfile(start_posn, posn, shares)
+		data.append(shares)
+		start_posn = posn
+		shingle_array = Array(constants.cSHINGLES_LENGTH, sint)
+		for j in range(constants.cSHINGLES_LENGTH):
+			shingle_posn = regint()
+			shingle_shares = sint()
+			readsharesfromfile(start_posn, shingle_posn, shingle_shares)
+			shingle_array[j] = shingle_shares
+			start_posn = shingle_posn
+		shingles.append(shingle_array)
+	return cShinglesDataSet(data=data, shingles=shingles)
+
+def setup_and_run_experiment_true(number_of_trials, dset=None, number_of_points=0):
+	if dset == None:
+		dset = generate_dataset(number_of_points)
 	letter = sint(44)
 	word_ints = []
 	for j in range(constants.STRING_LENGTH):
 			word_ints.append(letter)
-	word_shingles = FuzzyString.getShingles(word_ints, constants.STRING_LENGTH, constants.SHINGLES)
+	word_shingles = FuzzyString.getShingles(word_ints, constants.STRING_LENGTH, constants.cSHINGLES)
 	word_string = FuzzyString(word_ints, constants.STRING_LENGTH)
 	# for i in range(number_of_trials):
 	# 	found = dset.checkFuzzyMatch(word_string, word_shingles)
 	# 	print_ln("Found = %s", found.reveal())
-	run_experiment(dset, number_of_trials, word_string, word_shingles)
-
+	initial = time()
+	#run_shingles_experiment(dset, number_of_trials, word_string, word_shingles)
+	#run_sort_experiment(number_of_trials, dset.data)
+	final = time()
+	print_ln("Initial time = %s", initial)
+	print_ln("Final time = %s", final)
+	return 
 
 def run_experiment(dset, number_of_trials, fuzzy_str, word_shingles):
 	for i in range(number_of_trials):
 		found = dset.checkFuzzyMatch(fuzzy_str, word_shingles)
-		print_ln("Found = %s", found.reveal())
+		#print_ln("Found = %s", found.reveal())
+
+def run_shingles_experiment(dset, number_of_trials, fuzzy_str, word_shingles):
+	for i in range(number_of_trials):
+		dist = dset.shinglesDist(word_shingles, dset.shingledData[0], constants.cSHINGLES_LENGTH)
+
+def run_levenstein_experiment(dset, number_of_trials, fuzzy_str, word_shingles):
+	for i in range(number_of_trials):
+		dist = fuzzy_str.levenstein_distance(dset.data[i], constants.STRING_LENGTH)
+
+def run_sort_experiment(number_of_trials, points):
+	for i in range(number_of_trials):
+		BitonicSort.pushZerosToBack(points)
 
 
+# num_read = int(sys.stdin.read())
 
-setup_and_run_experiment_true(1000, 10)
+# #write_dataset(100)
+# dset = read_dataset(num_read)
+# # dset.printData()
+# print_ln("data len = %s", len(dset.data))
+setup_and_run_experiment_true(1, number_of_points=4)#, dset=dset)
 
+#print_ln("Average search time per point for data size %s = %s", num_read, avg_search_time)
 
+#setup_and_run_experiment_true(1000, 10)
+#writesharestofile(itertools.chain([a, b]))
+#writesharestofile(c)
 
+# shares = Array(3, sint)
+# start_posn = regint(0)
+# for i in range(3):
+# 	posn = regint()
+# 	share = sint()
+# 	readsharesfromfile(start_posn, posn, share)
+# 	shares[i] = share
+# 	print_ln("posn = %s", posn)
+# 	print_ln("read value %s", shares[i].reveal())
+# 	start_posn = posn
 
+# posn = regint()
+# share = sint()
+# readsharesfromfile(regint(0), posn, share)
+# shares[0] = share
+# print_ln("posn = %s", posn)
+# print_ln("read value %s", shares[0].reveal())
 
+# posn1 = regint()
+# share1 = sint()
+# readsharesfromfile(regint(32), posn1, share1)
+# shares[1] = share1
+# print_ln("posn = %s", posn1)
+# print_ln("read value %s", shares[1].reveal())
 
-
+# posn2 = regint()
+# share2 = sint()
+# readsharesfromfile(regint(64), posn2, share2)
+# shares[2] = share2
+# print_ln("posn = %s", posn2)
+# print_ln("read value %s", shares[2].reveal())

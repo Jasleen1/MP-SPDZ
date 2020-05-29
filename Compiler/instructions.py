@@ -12,7 +12,7 @@ documentation
 
 import itertools
 import operator
-from . import tools
+from Compiler import tools
 from random import randint
 from functools import reduce
 from Compiler.config import *
