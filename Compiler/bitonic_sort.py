@@ -17,7 +17,7 @@ class BitonicSort(object):
     @staticmethod
     @vectorize
     def greaterIfZero(a, b):
-        greater = BitonicSort.checkEqualityWithKnownVal(constants.ZERO, a, 1)
+        greater = a.equal(constants.ZERO, bit_length=1)#BitonicSort.checkEqualityWithKnownVal(constants.ZERO, a, 1)
         return (1 - greater)
 
     @staticmethod

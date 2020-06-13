@@ -12,3 +12,17 @@ services:
       - ./Programs:/usr/src/MP-SPDZ/Programs
       - ./Compiler:/usr/src/MP-SPDZ/Compiler
     command: bash Programs/Source/c_shingles_search.sh
+
+
+  create-data:
+    image: mp-spdz-local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./Programs:/usr/src/MP-SPDZ/Programs
+      - ./Compiler:/usr/src/MP-SPDZ/Compiler
+    command: bash Programs/Source/c_shingles_setup.sh
+

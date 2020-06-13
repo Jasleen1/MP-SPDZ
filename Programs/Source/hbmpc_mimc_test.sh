@@ -7,7 +7,7 @@ threshold=1
 
 # Compile the programs
 for i in hbmpc_mimc_test; do
-    ./compile.py -v -C -F 256  $i || exit 1
+    ./compile.py -D -v -C -F 256  $i || exit 1
 done
 
 # Setup the network authentication

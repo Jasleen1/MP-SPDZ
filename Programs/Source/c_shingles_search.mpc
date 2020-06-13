@@ -3,46 +3,17 @@ print("program.bit_length: ", program.bit_length)
 program.security = 40
 
 from cshingles_dataset import cShinglesDataSet 
-from fuzzy_string import FuzzyString
+from fuzzy_string import FuzzyString, mimc_prf
 
 from bitonic_sort import BitonicSort
 
 from instructions import writesharestofile, readsharesfromfile
 
+from util import *
+
 import constants
 import itertools
 import sys
-
-
-
-# Array of (duplicate) inputs
-#n = 50
-#A = Array(n, sint)
-#@for_range(n)
-#def f(i):
-#    A[i] = sint(a)
-
-# Compute equalities
-# if 0:
-#     sum = 0
-#     for _ in range(n):
-#         sum += (A[i] == 5)
-
-# Compute mimc
-#zs = Array(n, sint)
-#@for_range(n)
-#def f(i):
-#    zs[i] = mimc_prf(a, i)
-#y = sum(zs)
-#print_ln('Computing %s instances of MIMC', n)
-#y = mimc_prf(a, b)
-#print_ln('MiMC(%s, %s) = %s', a.reveal(), b.reveal(), y.reveal());
-
-
-# Inputs
-# a = sint.get_input_from(0)
-# b = sint.get_input_from(1)
-# c = sint.get_input_from(2)
 
 
 def generate_char_list():
@@ -81,87 +52,82 @@ def read_dataset(number_of_points):
 		shingles.append(shingle_array)
 	return cShinglesDataSet(data=data, shingles=shingles)
 
-def setup_and_run_experiment_true(number_of_trials, dset=None, number_of_points=0):
+def setup_and_run_experiment(number_of_trials, dset=None, number_of_points=0):
 	if dset == None:
 		dset = generate_dataset(number_of_points)
-	letter = sint(44)
+	letter = cint(30)
+	#letter2 = sint(30)
 	word_ints = []
 	for j in range(constants.STRING_LENGTH):
 			word_ints.append(letter)
-	word_shingles = FuzzyString.getShingles(word_ints, constants.STRING_LENGTH, constants.cSHINGLES)
+	word_shingles = FuzzyString.getClearShingles(word_ints, constants.STRING_LENGTH, constants.cSHINGLES)
 	word_string = FuzzyString(word_ints, constants.STRING_LENGTH)
-	# for i in range(number_of_trials):
-	# 	found = dset.checkFuzzyMatch(word_string, word_shingles)
-	# 	print_ln("Found = %s", found.reveal())
-	initial = time()
+	
+	# Comment and uncomment the experiment you want to run.
+	# Make sure to reveal values you want to take measurements for, 
+	# otherwise they may not get benchmarked.
 	#run_shingles_experiment(dset, number_of_trials, word_string, word_shingles)
-	run_sort_experiment(number_of_trials, dset.data[0:number_of_points])
-	final = time()
-	print_ln("Initial time = %s", initial)
-	print_ln("Final time = %s", final)
+	#run_lcs_experiment(dset, number_of_trials, word_string, word_shingles)
+	#run_sort_experiment(1, dset.data[0:number_of_points])
+	run_experiment(dset, 1, word_string, word_shingles)
+	
 	return 
 
 def run_experiment(dset, number_of_trials, fuzzy_str, word_shingles):
 	for i in range(number_of_trials):
 		found = dset.checkFuzzyMatch(fuzzy_str, word_shingles)
-		#print_ln("Found = %s", found.reveal())
+		print_ln("Found = %s", found.reveal())
 
 def run_shingles_experiment(dset, number_of_trials, fuzzy_str, word_shingles):
 	for i in range(number_of_trials):
 		dist = dset.shinglesDist(word_shingles, dset.shingledData[0], constants.cSHINGLES_LENGTH)
+		comp = dist.less_than(9, constants.MAX_SHINGLES_DIST_BITS)
+		mul_val = dset.data[0] * comp
+		print_ln("Found = %s", mul_val.reveal())
+		#print_ln("Distance = %s", dist.reveal())
 
-def run_levenstein_experiment(dset, number_of_trials, fuzzy_str, word_shingles):
+def run_lcs_experiment(dset, number_of_trials, fuzzy_str, word_shingles):
 	for i in range(number_of_trials):
-		dist = fuzzy_str.levenstein_distance(dset.data[i], constants.STRING_LENGTH)
+		dist = fuzzy_str.lcs_distance(dset.data[0], constants.STRING_LENGTH)
+		comp = dist.less_than(constants.THRESHOLD, constants.MAX_DIST_BITS)
+		print_ln("Found = %s", comp.reveal())
 
 def run_sort_experiment(number_of_trials, points):
 	for i in range(number_of_trials):
 		BitonicSort.pushZerosToBack(points)
+	print_ln("sum of points: %s", sum(points).reveal())
+
+def setup_and_run_mimc(n):
+	# Array of (duplicate) inputs
+	A = Array(n, sint)
+	for a in range(n):
+		A[a] = sint(a)
+
+	# Compute mimc
+	zs = Array(n, sint)
+	for i in range(n):
+		zs[i] = mimc_prf(A[i], sint(i))
+		print_ln('Computed %s as MIMC', zs[i].reveal())
+
+def setup_and_run_mults(n):
+	# Array of (duplicate) inputs
+	A = Array(n, sint)
+	for a in range(n):
+		A[a] = sint(a)
+
+	# Compute array of elements to multiply
+	zs = Array(n, sint)
+	for i in range(n):
+		zs[i] = A[i] * sint(i)
+	print_ln('Total prod  = %s ', sum(zs[i]).reveal())
 
 
 num_read = int(sys.stdin.read())
 
-#write_dataset(100)
-# dset = read_dataset(num_read)
-# # dset.printData()
-# print_ln("data len = %s", len(dset.data))
-dset = generate_dataset(4)
-setup_and_run_experiment_true(1, dset=dset, number_of_points=num_read)#dset=dset)
+dset = read_dataset(num_read)
 
-#print_ln("Average search time per point for data size %s = %s", num_read, avg_search_time)
+setup_and_run_experiment(num_read, dset=dset, number_of_points=num_read)
 
-#setup_and_run_experiment_true(1000, 10)
-#writesharestofile(itertools.chain([a, b]))
-#writesharestofile(c)
+### To run mimc benchmarks, comment out "setup_and_run_experiment" and uncomment below.
+#setup_and_run_mimc(num_read)
 
-# shares = Array(3, sint)
-# start_posn = regint(0)
-# for i in range(3):
-# 	posn = regint()
-# 	share = sint()
-# 	readsharesfromfile(start_posn, posn, share)
-# 	shares[i] = share
-# 	print_ln("posn = %s", posn)
-# 	print_ln("read value %s", shares[i].reveal())
-# 	start_posn = posn
-
-# posn = regint()
-# share = sint()
-# readsharesfromfile(regint(0), posn, share)
-# shares[0] = share
-# print_ln("posn = %s", posn)
-# print_ln("read value %s", shares[0].reveal())
-
-# posn1 = regint()
-# share1 = sint()
-# readsharesfromfile(regint(32), posn1, share1)
-# shares[1] = share1
-# print_ln("posn = %s", posn1)
-# print_ln("read value %s", shares[1].reveal())
-
-# posn2 = regint()
-# share2 = sint()
-# readsharesfromfile(regint(64), posn2, share2)
-# shares[2] = share2
-# print_ln("posn = %s", posn2)
-# print_ln("read value %s", shares[2].reveal())

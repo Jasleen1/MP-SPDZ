@@ -42,7 +42,7 @@ class FuzzyString(object):
     def __init__(self, value, num_chars=None):
         """Initialize a fuzzy string."""
         self.value = value
-        #self.accumulated_string = FuzzyString.createFuzzyString(value)
+        # self.accumulated_string = FuzzyString.createFuzzyString(value)
         self.num_chars = num_chars
         if num_chars == None:
             self.num_chars = len(value)
@@ -52,12 +52,25 @@ class FuzzyString(object):
     def createFuzzyString(char_list):
         """
         Create an accumulated fuzzy string with a bit 1 at the end to show that
-        it's not not_dummy.
+        it's not_dummy.
         @param: char_list is an array of sints symbolizing ascii chars.
         """
         accumulated = 1
         for i, char in enumerate(char_list):
             accumulated = accumulated + (char << (constants.ASCII_SIZE * i + 1))
+        return accumulated
+
+    @staticmethod
+    @vectorize
+    def createShingle(char_list):
+        """
+        Create an accumulated fuzzy string with a bit 1 at the end to show that
+        it's not_dummy.
+        @param: char_list is an array of sints symbolizing ascii chars.
+        """
+        accumulated = 0
+        for i, char in enumerate(char_list):
+            accumulated = accumulated + (char << (constants.ASCII_SIZE * i))
         return accumulated
 
     @staticmethod
@@ -90,7 +103,26 @@ class FuzzyString(object):
         # for now it is a list and assume uniqueness
         shingles = Array(total_size - c_param + 1, sint)
         for i in range(num_chars - c_param + 1):
-            shingles[i] = mimc_prf_array(char_list[i : i + c_param], keyInt)
+            shingles[i] = FuzzyString.createShingle(
+                char_list[i : i + c_param]
+            )  
+        padding = total_size - num_chars
+        if padding > 0:
+            for i in range(num_chars - c_param + 1, total_size - c_param + 1):
+                shingles[i] = constants.DUMMY_CHARACTER
+        return shingles
+
+    @staticmethod
+    def getClearShingles(
+        char_list, num_chars, c_param, total_size=constants.STRING_LENGTH
+    ):
+        # for testing purposes only
+        # for now it is a list and assume uniqueness
+        shingles = Array(total_size - c_param + 1, cint)
+        for i in range(num_chars - c_param + 1):
+            shingles[i] = FuzzyString.createShingle(
+                char_list[i : i + c_param]
+            )  # mimc_prf_array(char_list[i : i + c_param], keyInt)
         padding = total_size - num_chars
         if padding > 0:
             for i in range(num_chars - c_param + 1, total_size - c_param + 1):
@@ -101,8 +133,6 @@ class FuzzyString(object):
     def multiply_with_const(constant, accumulated_chars):
         return constant * accumulated_chars
 
-    # def multiply_val_with_const(self, constant):
-    #     return constant * self.accumulated_string
 
     def levenstein_distance(self, other, other_len):
         other_chars = FuzzyString.getChars(other, other_len)
@@ -132,18 +162,22 @@ class FuzzyString(object):
                 not_dummy_y = FuzzyString.not_dummy(chars_y[j - 1])
                 choice_bit = not_dummy_x * not_dummy_y
                 # print_ln("choice_bit = %s", choice_bit.reveal())
-                curr_eq = BitonicSort.checkEqualityWithKnownVal(
-                    chars_x[i - 1], chars_y[j - 1], constants.ASCII_SIZE
-                )
+                curr_eq = chars_y[j - 1].equal(chars_x[i - 1], constants.ASCII_SIZE)
                 substitution = 1 - curr_eq
                 candidate_val1 = dynamicProgMatrix[i - 1][j] + not_dummy_x
                 candidate_val2 = dynamicProgMatrix[i][j - 1] + not_dummy_y
                 candidate_val3 = (
                     dynamicProgMatrix[i - 1][j - 1] + substitution * choice_bit
                 )
-                less12 = candidate_val1 < candidate_val2
-                less23 = candidate_val2 < candidate_val3
-                less31 = candidate_val3 < candidate_val1
+                less12 = candidate_val1.less_than(
+                    candidate_val2, constants.MAX_DIST_BITS
+                )
+                less23 = candidate_val2.less_than(
+                    candidate_val3, constants.MAX_DIST_BITS
+                )
+                less31 = candidate_val3.less_than(
+                    candidate_val1, constants.MAX_DIST_BITS
+                )
 
                 dynamicProgMatrix[i][j] = (
                     candidate_val1 * less12 * (1 - less31)
@@ -156,12 +190,60 @@ class FuzzyString(object):
 
         return dynamicProgMatrix[x_len][y_len]
 
+    def lcs_distance(self, other, other_len):
+        other_chars = FuzzyString.getChars(other, other_len)
+        return self._lcsDistance(other_chars, other_len)
+
+    def _lcsDistance(self, chars_y, y_len):
+        chars_x = self.value
+        x_len = self.num_chars
+        dynamicProgMatrix = Matrix(x_len + 1, y_len + 1, sint)
+
+        for i in range(x_len + 1):
+            for j in range(y_len + 1):
+                dynamicProgMatrix[i][j] = constants.ZERO
+        total_len = 0
+        for i in range(1, x_len + 1):
+            for j in range(1, y_len + 1):
+                not_dummy_x = FuzzyString.not_dummy(chars_x[i - 1])
+                not_dummy_y = FuzzyString.not_dummy(chars_y[j - 1])
+                if i == 1:
+                    total_len = total_len + not_dummy_y
+                if j == 1:
+                    total_len = total_len + not_dummy_x
+
+                choice_bit = not_dummy_x * not_dummy_y
+                curr_eq = choice_bit * chars_y[j - 1].equal(
+                    chars_x[i - 1], constants.ASCII_SIZE
+                )
+
+                candidate_val1 = dynamicProgMatrix[i - 1][j]
+                candidate_val2 = dynamicProgMatrix[i][j - 1]
+
+                more12 = candidate_val1.greater_than(
+                    candidate_val2, constants.MAX_DIST_BITS
+                )
+
+                set_1 = more12 * candidate_val1
+                set_2 = (1 - more12) * candidate_val2
+
+                set_eq = curr_eq * (dynamicProgMatrix[i - 1][j - 1] + 1)
+                set_max = (1 - curr_eq) * (set_1 + set_2)
+
+                dynamicProgMatrix[i][j] = set_max + set_eq
+
+        return total_len - 2 * dynamicProgMatrix[x_len][y_len]
+
+
     @staticmethod
     @vectorize
     def not_dummy(character):
-        return 1 - BitonicSort.checkEqualityWithKnownVal(
-            constants.DUMMY_CHARACTER, character, 10
-        )
+        if type(character) == sint:
+            return 1 - character.equal(constants.DUMMY_CHARACTER, constants.ASCII_SIZE)
+        else:
+            return 1 - BitonicSort.checkEqualityWithKnownVal(
+                constants.DUMMY_CHARACTER, character, constants.ASCII_SIZE
+            )
 
     @staticmethod
     @vectorize

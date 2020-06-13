@@ -114,14 +114,21 @@ abwSc_string = FuzzyString(abwSc_ints, constants.STRING_LENGTH)
 
 matched2 = dset.checkFuzzyMatch(abwSc_string, abwSc_shingles)
 m2 = matched2.reveal()
-print_ln("Search for non-present value test: %s", m2 == 0)
+print_ln("Search for non-present value test 1: %s", m2 == 0)
+
+d_test1 = abwSc_string.levenstein_distance(FuzzyString.createFuzzyString(abcde_ints), 5)
+print_ln("D1 = %s", d_test1.reveal())
+
+d_test2 = abwSc_string.levenstein_distance(FuzzyString.createFuzzyString(abdec_ints), 5)
+print_ln("D2 = %s", d_test2.reveal())
+
 
 abwS_shingles = FuzzyString.getShingles(abwS_ints, 5, 2, constants.STRING_LENGTH)
 abwS_string = FuzzyString(FuzzyString.padToLen(abwS_ints), constants.STRING_LENGTH)
 
 matched3 = dset.checkFuzzyMatch(abwS_string, abwS_shingles)
 m3 = matched3.reveal()
-print_ln("Search for non-present value test: %s", m3 == 0)
+print_ln("Search for non-present value test 2: %s", m3 == 0)
 
 
 xyzAB_shingles = FuzzyString.getShingles(xyzAB_ints, 5, 2)
@@ -129,7 +136,7 @@ xyzAB_string = FuzzyString(xyzAB_ints)
 
 matched5 = dset.checkFuzzyMatch(xyzAB_string, xyzAB_shingles)
 m5 = matched5.reveal()
-print_ln("Search for non-present value test: %s", m5 == 0)
+print_ln("Search for non-present value test 3: %s", m5 == 0)
 
 
 
@@ -150,33 +157,41 @@ print_ln("Pushed zeros to back test for correct number of zeros in the back: %s"
 
 
 short_list = [sint(44), sint(10), sint(45), sint(11)]
-fs = FuzzyString(short_list)
+fs = FuzzyString(short_list, num_chars=4)
 
 short_list_subs = [sint(44), sint(10), sint(45), sint(10)]
 other_subs = FuzzyString.createFuzzyString(short_list_subs)
 dist_val_subs = fs.levenstein_distance(other_subs, 4)
+dist_val_subs_edit = fs.lcs_distance(other_subs, 4)
 print_ln("Levenstein distance substitution test = %s", dist_val_subs.reveal() == 1)
+print_ln("Edit distance substitution test = %s", dist_val_subs_edit.reveal() == 2)
 
 short_list3 = [sint(44), sint(10), sint(45)]
 other3 = FuzzyString.createFuzzyString(short_list3)
 dist_val_l3 = fs.levenstein_distance(other3, 3)
+dist_val_l3_edit = fs.lcs_distance(other3, 3)
 print_ln("Levenstein distance deletion test = %s", dist_val_l3.reveal() == 1)
+print_ln("Edit distance deletion test = %s", dist_val_l3_edit.reveal() == 1)
 
 short_list4 = [sint(44), sint(10), sint(45), sint(11)]
 other4 = FuzzyString.createFuzzyString(short_list4)
 dist_val_l4 = fs.levenstein_distance(other4, 4)
+dist_val_l4_edit = fs.lcs_distance(other4, 4)
 print_ln("Levenstein distance zero test = %s", dist_val_l4.reveal() == 0)
+print_ln("Edit distance zero test = %s", dist_val_l4_edit.reveal() == 0)
 
 short_list5 = [sint(44), sint(10), sint(45), sint(10), sint(0)]
 other5 = FuzzyString.createFuzzyString(short_list5)
 dist_val_l5 = fs.levenstein_distance(other5, 5)
-print_ln("Levenstein distance insertion test = %s", dist_val_l5.reveal() == 1)
+dist_val_l5_edit = fs.lcs_distance(other5, 5)
+print_ln("Levenstein distance substitution and dummy test = %s", dist_val_l5.reveal() == 1)
+print_ln("Edit distance substitution and dummy test = %s", dist_val_l5_edit.reveal() == 2)
 
 
-
-
-short_list3 = [sint(44), sint(10), sint(45)]
-other3 = FuzzyString.createFuzzyString(short_list3)
-dist_val_l3 = fs.levenstein_distance(other3, 3)
-print_ln("Levenstein distance deletion test = %s", dist_val_l3.reveal() == 1)
+empty_list = [sint(0), sint(0), sint(0), sint(0), sint(0)]
+empty_str = FuzzyString.createFuzzyString(empty_list)
+dist_val_empty = fs.levenstein_distance(empty_str, 5)
+dist_val_empty_edit = fs.lcs_distance(empty_str, 5)
+print_ln("Levenstein distance empty str test = %s", dist_val_empty.reveal() == 4)
+print_ln("Edit distance empty str test = %s", dist_val_empty_edit.reveal() == 4)
 
